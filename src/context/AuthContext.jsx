@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import API from "../services/api";
+import { Navigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -53,6 +54,8 @@ export const AuthProvider = ({ children }) => {
   const logout = (data) => {
     localStorage.removeItem("token");
     setUser(null);
+    <Navigate to={"/"} />;
+    window.reload();
   };
 
   return (
