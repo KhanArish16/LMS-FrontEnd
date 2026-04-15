@@ -15,15 +15,31 @@ const menuItems = [
     icon: LayoutDashboard,
     path: "/",
   },
+
   {
     name: "My Courses",
     icon: BookOpen,
     path: "/courses",
   },
   {
+    name: "Roadmap",
+    icon: LayoutDashboard,
+    path: "/roadmap",
+  },
+  {
+    name: "Videos",
+    icon: LayoutDashboard,
+    path: "/videos",
+  },
+  {
     name: "Quizzes",
     icon: FileText,
     path: "/quizzes",
+  },
+  {
+    name: "Blogs",
+    icon: BarChart,
+    path: "/blogs",
   },
   {
     name: "Messages",
@@ -44,7 +60,7 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 bg-white h-screen border-r border-gray-300 flex flex-col">
-      <div className="flex items-center gap-3 p-6 border-b border-gray-300 ">
+      <div className="flex items-center gap-3 p-4 border-b border-gray-300 ">
         <div className="bg-black text-white p-2 rounded-xl">
           <GraduationCap size={25} />
         </div>
@@ -53,9 +69,17 @@ export default function Sidebar() {
 
       <div className="p-6 border-b border-gray-300">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center font-semibold bg-gray-300">
-            {user?.name?.slice(0, 2).toUpperCase() || "AC"}
-          </div>
+          {user?.profilePic ? (
+            <img
+              src={user.profilePic}
+              alt="Profile"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full flex items-center justify-center font-semibold bg-gray-300">
+              {user?.name?.slice(0, 2).toUpperCase() || "AC"}
+            </div>
+          )}
 
           <div>
             <p className="font-semibold">{user?.name || "You"}</p>
