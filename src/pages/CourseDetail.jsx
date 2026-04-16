@@ -1,64 +1,159 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import API from "../services/api";
+import {
+  getCourseById,
+  getModules,
+  getLessons,
+} from "../services/courseServices";
 
-function CourseDetail() {
+import { PlayCircle, FileText, HelpCircle } from "lucide-react";
+
+const iconMap = {
+  VIDEO: PlayCircle,
+  BLOG: FileText,
+  QUIZ: HelpCircle,
+};
+
+export default function CourseDetail() {
   const { id } = useParams();
+
   const [course, setCourse] = useState(null);
+  const [modules, setModules] = useState([]);
+  const [selectedLesson, setSelectedLesson] = useState(null);
+  const [openModule, setOpenModule] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCourse();
+    fetchAllData();
   }, [id]);
 
-  const fetchCourse = async () => {
+  const fetchAllData = async () => {
     try {
-      const res = await API.get(`/courses/${id}`);
-      setCourse(res.data);
+      setLoading(true);
+      const courseRes = await getCourseById(id);
+      setCourse(courseRes.data);
+
+      const modulesRes = await getModules(id);
+      const modulesWithLessons = await Promise.all(
+        modulesRes.data.map(async (module, index) => {
+          const lessonsRes = await getLessons(module._id);
+          if (index === 0 && lessonsRes.data.length > 0) {
+            setOpenModule(module._id);
+            setSelectedLesson(lessonsRes.data[0]);
+          }
+
+          return {
+            ...module,
+            lessons: lessonsRes.data,
+          };
+        }),
+      );
+
+      setModules(modulesWithLessons);
     } catch (error) {
-      console.error("Error fetching course:", error);
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) return <p>Loading...</p>;
-
   if (!course) return <p>Course not found</p>;
 
   return (
-    <div>
-      {/* HEADER */}
-      <div className="bg-white p-6 rounded-xl shadow">
-        <h1 className="text-3xl font-bold">{course.title}</h1>
+    <div className="grid grid-cols-3 gap-6">
+      <div>
+        <div className="bg-white p-6 rounded-xl shadow mb-4">
+          <h1 className="text-xl font-bold">{course.title}</h1>
 
-        <p className="text-gray-500 mt-2">{course.description}</p>
+          <p className="text-gray-500 mt-2 text-sm">{course.description}</p>
 
-        <div className="flex gap-3 mt-4">
-          <span className="bg-blue-100 px-3 py-1 rounded text-sm">
-            {course.category}
-          </span>
+          <div className="flex gap-2 mt-3">
+            <span className="bg-blue-100 px-2 py-1 rounded text-xs">
+              {course.category}
+            </span>
 
-          <span className="bg-gray-100 px-3 py-1 rounded text-sm">
-            {course.level}
-          </span>
+            <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+              {course.level}
+            </span>
+          </div>
+
+          <p className="mt-3 text-xs text-gray-600">
+            Instructor: {course.instructor?.name}
+          </p>
         </div>
 
-        <p className="mt-4 text-sm text-gray-600">
-          Instructor: {course.instructor?.name}
-        </p>
+        <div className="space-y-3">
+          {modules.map((module) => (
+            <div key={module._id} className="bg-white rounded-xl shadow">
+              <div
+                onClick={() =>
+                  setOpenModule(openModule === module._id ? null : module._id)
+                }
+                className="p-4 font-semibold cursor-pointer flex justify-between"
+              >
+                {module.title}
+                <span>{module.lessons.length}</span>
+              </div>
+
+              {openModule === module._id && (
+                <div className="border-t">
+                  {module.lessons.map((lesson) => {
+                    const Icon = iconMap[lesson.type];
+
+                    const isActive = selectedLesson?._id === lesson._id;
+
+                    return (
+                      <div
+                        key={lesson._id}
+                        onClick={() => setSelectedLesson(lesson)}
+                        className={`flex items-center gap-3 p-3 cursor-pointer text-sm transition ${
+                          isActive
+                            ? "bg-blue-100 text-blue-600"
+                            : "hover:bg-gray-50"
+                        }`}
+                      >
+                        {Icon && <Icon size={16} />}
+                        {lesson.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* PLACEHOLDER FOR NEXT */}
-      <div className="mt-6 bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-semibold">Course Content</h2>
+      <div className="col-span-2 bg-white p-6 rounded-xl shadow">
+        {!selectedLesson ? (
+          <p className="text-gray-500">Select a lesson to start learning 🚀</p>
+        ) : (
+          <>
+            <h2 className="text-2xl font-semibold mb-4">
+              {selectedLesson.title}
+            </h2>
 
-        <p className="text-gray-500 mt-2">
-          Modules and lessons will appear here...
-        </p>
+            {selectedLesson.type === "VIDEO" && (
+              <video
+                src={selectedLesson.contentUrl}
+                controls
+                className="w-full rounded-lg"
+              />
+            )}
+
+            {selectedLesson.type === "BLOG" && (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: selectedLesson.content,
+                }}
+              />
+            )}
+
+            {selectedLesson.type === "QUIZ" && <p>Quiz UI coming next...</p>}
+          </>
+        )}
       </div>
     </div>
   );
 }
-
-export default CourseDetail;

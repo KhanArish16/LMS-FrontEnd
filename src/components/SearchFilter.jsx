@@ -50,7 +50,7 @@ export default function SearchFilter({
             value={level}
             onChange={(e) => setLevel(e.target.value)}
           >
-            <option value="">Level</option>
+            <option value="">All Level</option>
             <option value="BEGINNER">Beginner</option>
             <option value="INTERMEDIATE">Intermediate</option>
             <option value="ADVANCED">Advanced</option>

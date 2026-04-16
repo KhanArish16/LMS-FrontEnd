@@ -34,14 +34,14 @@ export default function Courses() {
     try {
       setLoading(true);
 
-      const data = await getCourses({
+      const res = await getCourses({
         search: debouncedSearch,
         category,
         level,
         sort,
       });
 
-      setCourses(data);
+      setCourses(res.data || res);
     } catch (err) {
       console.log(err);
     } finally {
@@ -51,8 +51,6 @@ export default function Courses() {
 
   return (
     <div>
-      {/* <h1 className="text-2xl font-bold mb-4">All Courses</h1> */}
-
       <SearchFilter
         search={search}
         setSearch={setSearch}
@@ -66,7 +64,12 @@ export default function Courses() {
 
       {loading && <p>Loading courses...</p>}
 
-      {!loading && courses.length === 0 && <p>No courses found</p>}
+      {!loading && courses.length === 0 && (
+        <div className="text-center mt-10 text-gray-500">
+          <p>No courses found</p>
+          <p className="text-sm mt-1">Try changing filters or search keyword</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-6 ">
         {courses.map((course) => (
