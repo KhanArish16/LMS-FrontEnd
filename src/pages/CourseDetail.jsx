@@ -6,7 +6,7 @@ import {
   getLessons,
 } from "../services/courseServices";
 
-import { PlayCircle, FileText, HelpCircle } from "lucide-react";
+import { PlayCircle, FileText, HelpCircle, CheckCircle } from "lucide-react";
 
 const iconMap = {
   VIDEO: PlayCircle,
@@ -83,17 +83,19 @@ export default function CourseDetail() {
           </p>
         </div>
 
-        <div className="space-y-3">
-          {modules.map((module) => (
-            <div key={module._id} className="bg-white rounded-xl shadow">
+        <div className="space-y-3 max-h-[80vh] overflow-y-auto pr-2">
+          {modules.map((module, index) => (
+            <div key={module._id} className="bg-white rounded-xl shadow-sm">
               <div
                 onClick={() =>
                   setOpenModule(openModule === module._id ? null : module._id)
                 }
-                className="p-4 font-semibold cursor-pointer flex justify-between"
+                className="p-4 font-semibold cursor-pointer flex justify-between items-center hover:bg-gray-50"
               >
-                {module.title}
-                <span>{module.lessons.length}</span>
+                <span>{module.title}</span>
+                <span className="text-xs text-gray-400">
+                  {module.lessons.length} Lessons
+                </span>
               </div>
 
               {openModule === module._id && (
@@ -107,14 +109,22 @@ export default function CourseDetail() {
                       <div
                         key={lesson._id}
                         onClick={() => setSelectedLesson(lesson)}
-                        className={`flex items-center gap-3 p-3 cursor-pointer text-sm transition ${
+                        className={`flex items-center gap-3 p-3 cursor-pointer text-sm transition-all ${
                           isActive
-                            ? "bg-blue-100 text-blue-600"
+                            ? "bg-blue-100 text-blue-600 border-l-4 border-blue-600"
                             : "hover:bg-gray-50"
                         }`}
                       >
-                        {Icon && <Icon size={16} />}
-                        {lesson.title}
+                        <div>{Icon && <Icon size={16} />}</div>
+
+                        <div className="flex-1">
+                          <p className="font-medium">{lesson.title}</p>
+                          <p className="text-xs text-gray-400">{lesson.type}</p>
+                        </div>
+
+                        <span className="text-xs text-gray-400">
+                          {index + 1}
+                        </span>
                       </div>
                     );
                   })}
@@ -127,12 +137,17 @@ export default function CourseDetail() {
 
       <div className="col-span-2 bg-white p-6 rounded-xl shadow">
         {!selectedLesson ? (
-          <p className="text-gray-500">Select a lesson to start learning 🚀</p>
+          <p className="text-gray-500 text-center mt-20">
+            Select a lesson to start learning 🚀
+          </p>
         ) : (
           <>
-            <h2 className="text-2xl font-semibold mb-4">
-              {selectedLesson.title}
-            </h2>
+            <div className="mb-4 border-b pb-3">
+              <h2 className="text-2xl font-semibold mb-4">
+                {selectedLesson.title}
+              </h2>
+              <p className="text-sm text-gray-400">{selectedLesson.type}</p>
+            </div>
 
             {selectedLesson.type === "VIDEO" && (
               <video
