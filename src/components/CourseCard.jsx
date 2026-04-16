@@ -1,6 +1,12 @@
+import { useNavigate } from "react-router-dom";
+
 export default function CourseCard({ course }) {
+  const navigate = useNavigate();
   return (
-    <div className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden cursor-pointer">
+    <div
+      className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden cursor-pointer"
+      onClick={() => navigate(`/courses/${course._id}`)}
+    >
       <img
         src={course.thumbnail || "https://via.placeholder.com/400x200"}
         className="w-full h-40 object-cover"
