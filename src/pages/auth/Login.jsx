@@ -22,20 +22,24 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen flex">
-      <Left />
+    <div className="min-h-screen p-1 flex flex-col md:flex-row ">
+      <div className="hidden md:flex md:w-1/2">
+        <Left />
+      </div>
 
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 bg-gray-50">
-        <div className="w-105">
-          <h1 className="text-3xl font-bold text-center mb-2">Welcome back</h1>
-          <p className="text-center text-gray-500 mb-6">
+      <div className="flex flex-col justify-center items-center w-full md:flex-1 min-h-screen md:min-h-0 md:w-1/2bg-gray-50 px-4">
+        <div className="w-full max-w-md mx-auto">
+          <h1 className="text-3xl sm:text-3xl font-bold text-center mb-2">
+            Welcome back
+          </h1>
+          <p className="text-center text-gray-500 mb-6 text-sm sm:text-base">
             Sign in to continue your learning journey
           </p>
 
           <div className="mb-4">
             <label className="text-sm">Email Address</label>
             <input
-              className="w-full border p-3 rounded-lg mt-1"
+              className="w-full border p-3 rounded-lg mt-1 text-sm"
               placeholder="you@example.com"
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
@@ -58,7 +62,7 @@ export default function Login() {
               />
 
               <span
-                className="absolute right-3 top-4 cursor-pointer"
+                className="absolute right-3 top-1/2  -translate-y-1/2 cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -77,7 +81,7 @@ export default function Login() {
 
           <button
             onClick={handleLogin}
-            className="w-full bg-black text-white py-3 rounded-lg hover:opacity-90"
+            className="w-full bg-black text-white py-3 rounded-lg hover:opacity-90 text-sm sm:text-base"
           >
             Sign In
           </button>

@@ -61,7 +61,7 @@ export default function CourseDetail() {
   if (!course) return <p>Course not found</p>;
 
   return (
-    <div className="grid grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div>
         <div className="bg-white p-6 rounded-xl shadow mb-4">
           <h1 className="text-xl font-bold">{course.title}</h1>
