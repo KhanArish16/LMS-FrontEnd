@@ -17,7 +17,7 @@ const menuItems = [
   },
 
   {
-    name: "My Courses",
+    name: "Courses",
     icon: BookOpen,
     path: "/courses",
   },
@@ -89,7 +89,7 @@ export default function Sidebar() {
       </div>
 
       <div className="p-3 flex-1">
-        <div className="text-s">
+        <div className="text-sm">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -98,7 +98,7 @@ export default function Sidebar() {
               <div
                 key={item.name}
                 onClick={() => navigate(item.path)}
-                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition ${
+                className={`flex items-center mb-1 gap-3 px-3 py-3 rounded-lg cursor-pointer transition ${
                   isActive
                     ? "bg-black text-white"
                     : "text-gray-700 hover:bg-gray-100"
