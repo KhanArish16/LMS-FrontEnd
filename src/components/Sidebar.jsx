@@ -7,6 +7,8 @@ import {
   MessageSquare,
   BarChart,
   GraduationCap,
+  Menu,
+  X,
 } from "lucide-react";
 
 const menuItems = [
@@ -53,18 +55,26 @@ const menuItems = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isSidebar, setIsSidebar }) {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   return (
-    <div className="w-64 bg-white h-screen border-r border-gray-300 flex flex-col">
+    <div
+      className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-300 flex flex-col z-50 transform transition-transform duration-300
+  ${isSidebar ? "translate-x-0" : "-translate-x-full"}
+  md:translate-x-0 md:static`}
+    >
       <div className="flex items-center gap-3 p-4 border-b border-gray-300 ">
         <div className="bg-black text-white p-2 rounded-xl">
           <GraduationCap size={25} />
         </div>
         <h1 className="text-xl font-bold">Smart LMS</h1>
+        <X
+          className="cursor-pointer md:hidden"
+          onClick={() => setIsSidebar(false)}
+        />
       </div>
 
       <div className="p-6 border-b border-gray-300">
@@ -88,7 +98,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <div className="p-3 flex-1">
+      <div className="p-3 ">
         <div className="text-sm">
           {menuItems.map((item) => {
             const Icon = item.icon;
@@ -97,7 +107,10 @@ export default function Sidebar() {
             return (
               <div
                 key={item.name}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  setIsSidebar(false);
+                }}
                 className={`flex items-center mb-1 gap-3 px-3 py-3 rounded-lg cursor-pointer transition ${
                   isActive
                     ? "bg-black text-white"

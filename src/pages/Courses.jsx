@@ -24,7 +24,7 @@ export default function Courses() {
     if (sort) newParams.sort = sort;
 
     setParams(newParams);
-  }, [debouncedSearch, category, level]);
+  }, [debouncedSearch, category, level, sort]);
 
   useEffect(() => {
     fetchCourses();
@@ -62,7 +62,11 @@ export default function Courses() {
         setSort={setSort}
       />
 
-      {loading && <p>Loading courses...</p>}
+      {loading && (
+        <div className="flex justify-center items-center mt-10">
+          <p className="text-gray-500">Loading courses...</p>
+        </div>
+      )}
 
       {!loading && courses.length === 0 && (
         <div className="text-center mt-10 text-gray-500">
@@ -71,7 +75,7 @@ export default function Courses() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6 ">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4">
         {courses.map((course) => (
           <CourseCard key={course._id} course={course} />
         ))}
