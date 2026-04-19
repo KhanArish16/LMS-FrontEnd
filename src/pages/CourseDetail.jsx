@@ -18,6 +18,7 @@ import {
   Layers,
 } from "lucide-react";
 import { Loader } from "../components/Loader";
+import { useAuth } from "../context/AuthContext";
 
 const iconMap = {
   VIDEO: PlayCircle,
@@ -61,6 +62,7 @@ function TypeBadge({ type, size = "sm" }) {
 }
 
 export default function CourseDetail() {
+  const { user } = useAuth();
   const { id } = useParams();
   const [course, setCourse] = useState(null);
   const [modules, setModules] = useState([]);
@@ -70,8 +72,23 @@ export default function CourseDetail() {
   const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
   const [progressMap, setProgressMap] = useState({});
   const [courseProgress, setCourseProgress] = useState(0);
-
   const saveTimeout = useRef(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+
+  useEffect(() => {
+    if (course?.students?.includes(user.id)) {
+      setIsEnrolled(true);
+    }
+  }, [course]);
+
+  const handleEnroll = async () => {
+    try {
+      await API.post(`/courses/${id}/enroll`);
+      setIsEnrolled(true);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
     fetchAllData();
@@ -297,6 +314,14 @@ export default function CourseDetail() {
 
     return (
       <>
+        {!isEnrolled && user.role === "STUDENT" && (
+          <button
+            onClick={handleEnroll}
+            className="bg-black text-white px-4 py-2 rounded-lg mt-4"
+          >
+            Enroll Now
+          </button>
+        )}
         <div
           className={`flex items-start justify-between gap-3 ${compact ? "mb-3" : "mb-5"}`}
         >
