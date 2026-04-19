@@ -1,34 +1,40 @@
 import { useEffect, useState } from "react";
-import { getCourses } from "../services/courseServices";
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function StudentDashboard() {
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [progressMap, setProgressMap] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user?._id) fetchData();
+  }, [user]);
 
   const fetchData = async () => {
     try {
-      const coursesRes = await getCourses();
-      setCourses(coursesRes.data || coursesRes);
+      const res = await API.get("/courses");
 
-      const progressPromises = (coursesRes.data || coursesRes).map(
-        async (course) => {
-          const res = await API.get(`/progress/course/${course._id}`);
-          return { courseId: course._id, progress: res.data.progress };
-        },
+      const userId = user._id;
+
+      const enrolled = res.data.filter((course) =>
+        course.students?.some((student) => student._id === userId),
       );
+
+      setCourses(enrolled);
+
+      const progressPromises = enrolled.map(async (course) => {
+        const p = await API.get(`/progress/course/${course._id}`);
+        return { id: course._id, progress: p.data.progress };
+      });
 
       const progressData = await Promise.all(progressPromises);
 
       const map = {};
       progressData.forEach((p) => {
-        map[p.courseId] = p.progress;
+        map[p.id] = p.progress;
       });
 
       setProgressMap(map);
@@ -58,6 +64,7 @@ export default function StudentDashboard() {
                   <span>Progress</span>
                   <span>{progressMap[course._id] || 0}%</span>
                 </div>
+
                 <div className="h-2 bg-gray-200 rounded">
                   <div
                     className="h-2 bg-blue-500"
@@ -91,6 +98,7 @@ export default function StudentDashboard() {
                   <span>Progress</span>
                   <span>{progressMap[course._id] || 0}%</span>
                 </div>
+
                 <div className="h-2 bg-gray-200 rounded">
                   <div
                     className="h-2 bg-blue-500"
