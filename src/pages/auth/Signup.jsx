@@ -37,15 +37,17 @@ export default function Signup() {
   };
 
   return (
-    <div className="h-screen flex">
-      <Left />
+    <div className="min-h-screen flex flex-col md:flex-row p-1">
+      <div className="hidden md:flex md:w-1/2">
+        <Left />
+      </div>
 
-      <div className="flex justify-center items-center w-full md:w-1/2 bg-gray-50">
-        <div className="w-105">
-          <h1 className="text-3xl font-bold text-center mb-2">
+      <div className="flex flex-col justify-center items-center w-full md:flex-1 min-h-screen md:min-h-0 md:w-1/2 bg-gray-50 md:p-1.5 px-4">
+        <div className="w-full max-w-md mx-auto">
+          <h1 className="text-3xl sm:text-3xl font-bold text-center mb-2">
             Create account
           </h1>
-          <p className="text-center text-gray-500 mb-6">
+          <p className="text-center text-gray-500 mb-6 text-sm sm:text-base">
             Start your learning journey today
           </p>
 
@@ -83,7 +85,10 @@ export default function Signup() {
             <label className="text-sm">Full Name</label>
 
             <div className="relative">
-              <User className="absolute left-3 top-3 text-gray-400" size={18} />
+              <User
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 "
+                size={18}
+              />
 
               <input
                 className="w-full border pl-10 p-3 rounded-lg mt-1"
@@ -97,7 +102,10 @@ export default function Signup() {
             <label className="text-sm">Email Address</label>
 
             <div className="relative">
-              <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Mail
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
 
               <input
                 className="w-full border pl-10 p-3 rounded-lg mt-1"
@@ -111,7 +119,10 @@ export default function Signup() {
             <label className="text-sm">Password</label>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Lock
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
 
               <input
                 type={showPassword ? "text" : "password"}
@@ -126,7 +137,7 @@ export default function Signup() {
               />
 
               <span
-                className="absolute right-3 top-3 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -138,7 +149,10 @@ export default function Signup() {
             <label className="text-sm">Confirm Password</label>
 
             <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+              <Lock
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
 
               <input
                 type="password"

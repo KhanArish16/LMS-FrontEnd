@@ -2,7 +2,7 @@ import React from "react";
 
 function Left() {
   return (
-    <div className="hidden md:flex w-1/2 bg-[#0d0f14] text-white flex-col justify-between p-10">
+    <div className="hidden md:flex w-full bg-[#0d0f14] text-white flex-col justify-between p-10">
       <div className="flex items-center gap-2">
         <div className="bg-white text-black p-2 rounded-lg">🎓</div>
         <h1 className="text-xl font-semibold">Smart LMS</h1>
