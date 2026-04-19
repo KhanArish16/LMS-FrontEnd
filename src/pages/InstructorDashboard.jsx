@@ -39,7 +39,7 @@ export default function InstructorDashboard() {
       </div>
 
       <div>
-        <h2 className="font-semibold mb-3">Your Courses</h2>
+        <h2 className="font-semibold mb-3">Your Courses </h2>
 
         <div className="grid grid-cols-3 gap-6">
           {courses.map((course) => (
