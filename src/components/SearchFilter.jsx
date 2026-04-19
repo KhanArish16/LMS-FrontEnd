@@ -5,6 +5,7 @@ import {
   Briefcase,
   ArrowDownUp,
   ChevronDown,
+  X,
 } from "lucide-react";
 
 const iconMap = {
@@ -48,6 +49,14 @@ export default function SearchFilter({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="ml-1.5 shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X size={13} />
+            </button>
+          )}
         </div>
 
         <div className="flex flex-row gap-3 items-center">
@@ -86,7 +95,7 @@ export default function SearchFilter({
         </div>
       </div>
 
-      <div className="flex gap-2 mt-4 flex-wrap overflow-x-auto pb-2">
+      <div className="flex gap-2 mt-4 flex-wrap overflow-x-auto pb-2 ">
         <button
           onClick={() => setCategory("")}
           className={`px-4 py-2 rounded-lg text-xs font-bold tracking-wider 

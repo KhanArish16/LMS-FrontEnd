@@ -4,6 +4,8 @@ import CourseCard from "../components/CourseCard";
 import SearchFilter from "../components/SearchFilter";
 import { getCourses } from "../services/courseServices";
 import useDebounce from "../hooks/useDebounce";
+import { Loader } from "../components/Loader";
+import { Search } from "lucide-react";
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -62,23 +64,52 @@ export default function Courses() {
         setSort={setSort}
       />
 
-      {loading && (
-        <div className="flex justify-center items-center mt-10">
-          <p className="text-gray-500">Loading courses...</p>
-        </div>
-      )}
+      <div className="relative mt-6">
+        {loading && courses.length > 0 && (
+          <div className="absolute inset-x-0 -top-2 flex justify-center z-10">
+            <Loader />
+          </div>
+        )}
 
-      {!loading && courses.length === 0 && (
-        <div className="text-center mt-10 text-gray-500">
-          <p>No courses found</p>
-          <p className="text-sm mt-1">Try changing filters or search keyword</p>
-        </div>
-      )}
+        {loading && courses.length === 0 && (
+          <div className="flex h-[60vh] w-full items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <Loader />
+              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Fetching Courses
+              </p>
+            </div>
+          </div>
+        )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4">
-        {courses.map((course) => (
-          <CourseCard key={course._id} course={course} />
-        ))}
+        {!loading && courses.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
+            <div className="bg-gray-50 p-4 rounded-full mb-4">
+              <Search className="text-gray-300" size={32} />
+            </div>
+            <p className="font-bold text-gray-900">No courses found</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Try adjusting your filters or search term
+            </p>
+            <button
+              onClick={() => {
+                setSearch("");
+                setCategory("");
+                setLevel("");
+                setSort("");
+              }}
+              className="mt-6 text-xs font-bold text-indigo-600 hover:underline underline-offset-4"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4">
+          {courses.map((course) => (
+            <CourseCard key={course._id} course={course} />
+          ))}
+        </div>
       </div>
     </div>
   );
