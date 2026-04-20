@@ -1,5 +1,44 @@
 import { useState, useEffect } from "react";
+import {
+  X,
+  BookOpen,
+  PlayCircle,
+  FileText,
+  HelpCircle,
+  Link,
+  Upload,
+  Tag,
+} from "lucide-react";
 import { uploadVideoToCloudinary } from "../utils/cloudinaryUpload";
+
+const TYPES = [
+  {
+    value: "VIDEO",
+    label: "Video",
+    icon: PlayCircle,
+    color: "bg-blue-50 text-blue-600 border-blue-200",
+  },
+  {
+    value: "YOUTUBE",
+    label: "YouTube",
+    icon: PlayCircle,
+    color: "bg-red-50 text-red-600 border-red-200",
+  },
+  {
+    value: "BLOG",
+    label: "Blog",
+    icon: FileText,
+    color: "bg-emerald-50 text-emerald-600 border-emerald-200",
+  },
+  {
+    value: "QUIZ",
+    label: "Quiz",
+    icon: HelpCircle,
+    color: "bg-amber-50 text-amber-600 border-amber-200",
+  },
+];
+
+const CATEGORIES = ["DSA", "FRONTEND", "BACKEND", "FULLSTACK", "WEB", "OTHER"];
 
 export default function LessonModal({
   isOpen,
@@ -16,6 +55,10 @@ export default function LessonModal({
     contentUrl: "",
     file: null,
   });
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (editingLesson) {
@@ -30,6 +73,8 @@ export default function LessonModal({
     } else {
       resetForm();
     }
+    setError("");
+    setUploadProgress(0);
   }, [editingLesson, isOpen]);
 
   const resetForm = () => {
@@ -46,32 +91,33 @@ export default function LessonModal({
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    if (!form.title) return alert("Title required");
-
-    let uploadedUrl = form.contentUrl;
+    if (!form.title.trim()) return setError("Lesson title is required");
+    setError("");
+    setSaving(true);
 
     try {
+      let uploadedUrl = form.contentUrl;
+
       if (form.type === "VIDEO") {
-        if (!editingLesson && !form.file) {
-          return alert("Upload video");
-        }
-
+        if (!editingLesson && !form.file)
+          return setError("Please upload a video file");
         if (form.file) {
-          uploadedUrl = await uploadVideoToCloudinary(form.file);
+          setUploading(true);
+          uploadedUrl = await uploadVideoToCloudinary(form.file, (p) =>
+            setUploadProgress(p),
+          );
+          setUploading(false);
+          if (!uploadedUrl) return setError("Video upload failed");
         }
-
-        if (!uploadedUrl) {
-          return alert("Video URL missing");
-        }
+        if (!uploadedUrl) return setError("Video URL is missing");
       }
-
-      if (form.type === "YOUTUBE" && !form.contentUrl) {
-        return alert("Add YouTube URL");
-      }
-
-      if ((form.type === "BLOG" || form.type === "QUIZ") && !form.content) {
-        return alert("Content required");
-      }
+      if (form.type === "YOUTUBE" && !form.contentUrl.trim())
+        return setError("YouTube URL is required");
+      if (
+        (form.type === "BLOG" || form.type === "QUIZ") &&
+        !form.content.trim()
+      )
+        return setError("Content is required");
 
       const payload = {
         title: form.title,
@@ -79,128 +125,252 @@ export default function LessonModal({
         category: form.category,
         moduleId,
       };
-
-      if (form.type === "VIDEO") {
+      if (form.type === "VIDEO" || form.type === "YOUTUBE")
         payload.contentUrl = uploadedUrl;
-      }
-
-      if (form.type === "YOUTUBE") {
-        payload.contentUrl = form.contentUrl;
-      }
-
-      if (form.type === "BLOG" || form.type === "QUIZ") {
+      if (form.type === "BLOG" || form.type === "QUIZ")
         payload.content = form.content;
-      }
 
       await onSubmit(payload);
-
       onClose();
     } catch (err) {
       console.error(err);
-      alert("Something went wrong");
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSaving(false);
+      setUploading(false);
     }
   };
 
-  const renderContentInput = () => {
-    switch (form.type) {
-      case "VIDEO":
-        return (
-          <div>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => setForm({ ...form, file: e.target.files[0] })}
-            />
-            {editingLesson && (
-              <p className="text-xs text-gray-400 mt-1">
-                Upload to replace existing video
-              </p>
-            )}
-          </div>
-        );
-
-      case "YOUTUBE":
-        return (
-          <input
-            placeholder="YouTube URL"
-            className="input"
-            value={form.contentUrl}
-            onChange={(e) => setForm({ ...form, contentUrl: e.target.value })}
-          />
-        );
-
-      case "BLOG":
-      case "QUIZ":
-        return (
-          <textarea
-            placeholder="Enter content..."
-            className="input mt-2"
-            rows={5}
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
+  const activeType = TYPES.find((t) => t.value === form.type);
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-xl w-full max-w-lg space-y-4">
-        <h2 className="font-bold text-lg">
-          {editingLesson ? "Edit Lesson" : "Create Lesson"}
-        </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
 
-        <input
-          placeholder="Lesson Title"
-          className="input"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-        />
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg border border-gray-100 overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div
+              className={`w-8 h-8 rounded-xl flex items-center justify-center border ${activeType?.color ?? "bg-blue-50 text-blue-600 border-blue-200"}`}
+            >
+              {activeType && <activeType.icon size={14} />}
+            </div>
+            <h2 className="text-sm font-bold text-gray-900">
+              {editingLesson ? "Edit Lesson" : "New Lesson"}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+          >
+            <X size={13} className="text-gray-500" />
+          </button>
+        </div>
 
-        <select
-          className="input"
-          value={form.type}
-          onChange={(e) => setForm({ ...form, type: e.target.value })}
-        >
-          <option value="VIDEO">VIDEO</option>
-          <option value="YOUTUBE">YOUTUBE</option>
-          <option value="BLOG">BLOG</option>
-          <option value="QUIZ">QUIZ</option>
-        </select>
+        <div className="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-xl">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+              <p className="text-xs text-red-600 font-medium">{error}</p>
+            </div>
+          )}
 
-        <select
-          className="input"
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-        >
-          <option value="DSA">DSA</option>
-          <option value="FRONTEND">FRONTEND</option>
-          <option value="BACKEND">BACKEND</option>
-          <option value="FULLSTACK">FULLSTACK</option>
-          <option value="WEB">WEB</option>
-        </select>
+          <div>
+            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              Lesson Title
+            </label>
+            <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-50 transition-all">
+              <BookOpen size={13} className="text-gray-400 shrink-0" />
+              <input
+                placeholder="e.g. Introduction to Hooks"
+                className="bg-transparent outline-none text-sm text-gray-800 w-full placeholder:text-gray-400 font-medium"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
+            </div>
+          </div>
 
-        {renderContentInput()}
+          <div>
+            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              Lesson Type
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {TYPES.map(({ value, label, icon: Icon, color }) => (
+                <button
+                  key={value}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      type: value,
+                      content: "",
+                      contentUrl: "",
+                      file: null,
+                    })
+                  }
+                  className={`flex flex-col items-center gap-1.5 py-2.5 rounded-xl border text-[11px] font-bold transition-all ${
+                    form.type === value
+                      ? color
+                      : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  <Icon size={15} />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        <div className="flex gap-2 pt-3">
+          <div>
+            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              Category
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setForm({ ...form, category: cat })}
+                  className={`px-2.5 py-1 text-[10px] font-black tracking-widest border transition-all ${
+                    form.category === cat
+                      ? "bg-gray-900 border-gray-900 text-white"
+                      : "bg-white border-gray-200 text-gray-500 hover:border-gray-400 hover:text-gray-700"
+                  }`}
+                  style={{ borderRadius: "4px" }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block">
+              Content
+            </label>
+
+            {form.type === "VIDEO" && (
+              <label
+                className={`flex flex-col items-center gap-2 py-7 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                  form.file
+                    ? "border-blue-300 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300 bg-gray-50"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.file ? "bg-blue-100" : "bg-gray-200"}`}
+                >
+                  <Upload
+                    size={18}
+                    className={form.file ? "text-blue-600" : "text-gray-400"}
+                  />
+                </div>
+                <div className="text-center">
+                  {form.file ? (
+                    <>
+                      <p className="text-sm font-semibold text-blue-700 truncate max-w-[200px]">
+                        {form.file.name}
+                      </p>
+                      <p className="text-xs text-blue-500 mt-0.5">
+                        Click to replace
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {editingLesson
+                          ? "Upload new video"
+                          : "Upload video file"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        MP4, MOV, AVI supported
+                      </p>
+                    </>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={(e) =>
+                    setForm({ ...form, file: e.target.files[0] })
+                  }
+                />
+              </label>
+            )}
+
+            {uploading && (
+              <div className="mt-2">
+                <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                  <span>Uploading…</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {form.type === "YOUTUBE" && (
+              <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus-within:border-red-300 focus-within:ring-2 focus-within:ring-red-50 transition-all">
+                <Link size={13} className="text-gray-400 shrink-0" />
+                <input
+                  placeholder="https://youtube.com/watch?v=..."
+                  className="bg-transparent outline-none text-sm text-gray-800 w-full placeholder:text-gray-400"
+                  value={form.contentUrl}
+                  onChange={(e) =>
+                    setForm({ ...form, contentUrl: e.target.value })
+                  }
+                />
+              </div>
+            )}
+
+            {(form.type === "BLOG" || form.type === "QUIZ") && (
+              <div className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-50 transition-all">
+                <textarea
+                  placeholder={
+                    form.type === "BLOG"
+                      ? "Write your blog content here…"
+                      : "Enter quiz questions and answers…"
+                  }
+                  rows={6}
+                  className="bg-transparent outline-none text-sm text-gray-800 w-full placeholder:text-gray-400 resize-none"
+                  value={form.content}
+                  onChange={(e) =>
+                    setForm({ ...form, content: e.target.value })
+                  }
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2.5 px-6 pb-5 pt-2 shrink-0 border-t border-gray-100">
           <button
             onClick={() => {
               resetForm();
               onClose();
             }}
-            className="flex-1 border rounded p-2"
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
-
           <button
             onClick={handleSubmit}
-            className="flex-1 bg-black text-white rounded p-2"
+            disabled={saving || uploading}
+            className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60"
           >
-            Save
+            {uploading
+              ? "Uploading…"
+              : saving
+                ? "Saving…"
+                : editingLesson
+                  ? "Update Lesson"
+                  : "Create Lesson"}
           </button>
         </div>
       </div>
