@@ -5,6 +5,10 @@ const API = axios.create({
 });
 
 API.interceptors.request.use((req) => {
+  if (req.data instanceof FormData) {
+    delete req.headers["Content-Type"];
+  }
+
   const token = localStorage.getItem("token");
   if (token) {
     req.headers.Authorization = `Bearer ${token}`;

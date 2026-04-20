@@ -81,6 +81,12 @@ export default function Sidebar({ isSidebar, setIsSidebar }) {
     setIsSidebar(false);
   };
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+    window.location.reload();
+  };
+
   return (
     <>
       {isSidebar && (
@@ -212,7 +218,10 @@ export default function Sidebar({ isSidebar, setIsSidebar }) {
         </nav>
 
         <div className="p-3 border-t border-gray-100">
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150 group">
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-150 group"
+          >
             <span className="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100 flex items-center justify-center transition-colors shrink-0">
               <LogOut size={13} />
             </span>
