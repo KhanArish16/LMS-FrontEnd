@@ -269,7 +269,7 @@ export default function LessonModal({
                 <div className="text-center">
                   {form.file ? (
                     <>
-                      <p className="text-sm font-semibold text-blue-700 truncate max-w-[200px]">
+                      <p className="text-sm font-semibold text-blue-700 truncate max-w-50">
                         {form.file.name}
                       </p>
                       <p className="text-xs text-blue-500 mt-0.5">
