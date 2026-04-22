@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Loader } from "../components/Loader";
 import { useAuth } from "../context/AuthContext";
+import QuizPlayer from "../components/QuizPlayer";
 
 const iconMap = {
   VIDEO: PlayCircle,
@@ -408,11 +409,8 @@ export default function CourseDetail() {
         )}
 
         {selectedLesson.type === "QUIZ" && (
-          <div className="flex flex-col items-center justify-center h-32 gap-2 rounded-2xl bg-amber-50 border border-amber-100">
-            <HelpCircle size={28} className="text-amber-400" />
-            <p className="text-sm text-amber-700 font-medium">
-              Quiz coming soon…
-            </p>
+          <div className="p-4">
+            <QuizPlayer lessonId={selectedLesson._id} />
           </div>
         )}
       </>
