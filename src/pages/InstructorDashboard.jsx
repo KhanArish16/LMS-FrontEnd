@@ -12,6 +12,7 @@ import {
   BarChart2,
   ArrowRight,
 } from "lucide-react";
+import { Loader } from "../components/Loader";
 
 const levelStyle = {
   BEGINNER: {
@@ -71,6 +72,13 @@ export default function InstructorDashboard() {
       setDeleting(null);
     }
   };
+
+  if (loading)
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader />
+      </div>
+    );
 
   return (
     <div>
