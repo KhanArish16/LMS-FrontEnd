@@ -76,7 +76,7 @@ export default function CourseDetail() {
   const [isEnrolled, setIsEnrolled] = useState(false);
 
   useEffect(() => {
-    if (course?.students?.includes(user.id)) {
+    if (course?.students?.some((s) => s._id === user.id)) {
       setIsEnrolled(true);
     }
   }, [course]);
@@ -160,12 +160,12 @@ export default function CourseDetail() {
         getCourseById(id),
         getModules(id),
       ]);
-      setCourse(courseRes.data);
+      setCourse(courseRes.data?.data);
 
       const modulesWithLessons = await Promise.all(
-        modulesRes.data.map(async (module) => {
+        (modulesRes.data?.data || []).map(async (module) => {
           const lessonsRes = await getLessons(module._id);
-          return { ...module, lessons: lessonsRes.data };
+          return { ...module, lessons: lessonsRes.data?.data || [] };
         }),
       );
       setModules(modulesWithLessons);
@@ -189,7 +189,10 @@ export default function CourseDetail() {
     setMobileDropdownOpen(false);
   };
 
-  const totalLessons = modules.reduce((a, m) => a + m.lessons.length, 0);
+  const totalLessons = modules.reduce(
+    (a, m) => a + (m.lessons?.length || 0),
+    0,
+  );
 
   if (loading)
     return (
@@ -227,7 +230,7 @@ export default function CourseDetail() {
               {module.title}
             </span>
             <span className="text-[10px] text-gray-400 mr-1">
-              {module.lessons.length}
+              {(module.lessons || []).length}
             </span>
             <ChevronDown
               size={14}
@@ -237,7 +240,7 @@ export default function CourseDetail() {
 
           {openModule === module._id && (
             <div className="border-t border-gray-100">
-              {module.lessons.map((lesson) => {
+              {(module.lessons || []).map((lesson) => {
                 const isCompleted = progressMap[lesson._id]?.completed;
                 const Icon = iconMap[lesson.type];
                 const isActive = selectedLesson?._id === lesson._id;
@@ -340,7 +343,6 @@ export default function CourseDetail() {
           </div>
         </div>
 
-        {/* Native video */}
         {selectedLesson.type === "VIDEO" && (
           <div className="rounded-2xl overflow-hidden bg-black">
             <video

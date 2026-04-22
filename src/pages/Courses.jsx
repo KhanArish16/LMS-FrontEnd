@@ -43,7 +43,11 @@ export default function Courses() {
         sort,
       });
 
-      setCourses(res.data || res);
+      const coursesArray = Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
+
+      setCourses(coursesArray);
     } catch (err) {
       console.log(err);
     } finally {

@@ -12,6 +12,7 @@ import Blogs from "./pages/Blogs";
 import Roadmap from "./pages/Roadmap";
 import Videos from "./pages/Videos";
 import CourseDetail from "./pages/CourseDetail";
+import CourseBuilder from "./pages/CourseBuilder";
 
 function App() {
   return (
@@ -59,6 +60,17 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <Courses />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/course-builder/:courseId"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <CourseBuilder />
               </DashboardLayout>
             </ProtectedRoute>
           }
