@@ -52,7 +52,20 @@ export default function CourseBuilder() {
         modulesData.map(async (module) => {
           try {
             const lr = await API.get(`/lessons?moduleId=${module._id}`);
-            return { ...module, lessons: lr.data?.data || [] };
+            const lessons = lr.data?.data || [];
+
+            const lessonsWithQuiz = await Promise.all(
+              lessons.map(async (lesson) => {
+                if (lesson.type !== "QUIZ") return lesson;
+                try {
+                  const qr = await API.get(`/quiz/${lesson._id}`);
+                  return { ...lesson, quiz: qr.data?.data ?? null };
+                } catch {
+                  return { ...lesson, quiz: null };
+                }
+              }),
+            );
+            return { ...module, lessons: lessonsWithQuiz };
           } catch {
             return { ...module, lessons: [] };
           }
@@ -80,10 +93,60 @@ export default function CourseBuilder() {
   };
 
   const handleLessonSubmit = async (payload) => {
-    if (editingLesson) await API.put(`/lessons/${editingLesson._id}`, payload);
-    else await API.post("/lessons", payload);
-    setShowLessonModal(false);
-    fetchModules();
+    try {
+      let lessonId;
+
+      if (editingLesson) {
+        const res = await API.put(`/lessons/${editingLesson._id}`, {
+          title: payload.title,
+          type: payload.type,
+          category: payload.category,
+          moduleId: payload.moduleId,
+          content: payload.content || "",
+          contentUrl: payload.contentUrl || "",
+        });
+
+        lessonId = res.data?.data?._id || editingLesson._id;
+      } else {
+        const res = await API.post("/lessons", {
+          title: payload.title,
+          type: payload.type,
+          category: payload.category,
+          moduleId: payload.moduleId,
+          content: payload.content || "",
+          contentUrl: payload.contentUrl || "",
+        });
+
+        lessonId = res.data?.data?._id;
+      }
+
+      if (!lessonId) {
+        throw new Error("Lesson ID not returned");
+      }
+
+      if (payload.type === "QUIZ") {
+        if (!payload.quiz || payload.quiz.length === 0) {
+          throw new Error("Quiz questions missing");
+        }
+
+        if (editingLesson) {
+          await API.put(`/quiz/${lessonId}`, {
+            questions: payload.quiz,
+          });
+        } else {
+          await API.post("/quiz", {
+            lessonId,
+            questions: payload.quiz,
+          });
+        }
+      }
+
+      setShowLessonModal(false);
+      setEditingLesson(null);
+      fetchModules();
+    } catch (err) {
+      console.error("Lesson submit error:", err.response?.data || err.message);
+    }
   };
 
   const handleLessonDelete = async (lessonId) => {
@@ -141,7 +204,6 @@ export default function CourseBuilder() {
                 <span className="shrink-0 w-7 h-7 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-[11px] font-bold text-white shadow-sm shadow-blue-200">
                   {moduleIndex + 1}
                 </span>
-
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 leading-snug truncate">
                     {module.title}
@@ -152,7 +214,6 @@ export default function CourseBuilder() {
                     </p>
                   )}
                 </div>
-
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => {
@@ -216,7 +277,6 @@ export default function CourseBuilder() {
                           >
                             <Icon size={13} />
                           </span>
-
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold text-gray-800 truncate">
                               {lesson.title}
@@ -230,11 +290,9 @@ export default function CourseBuilder() {
                               </span>
                             </div>
                           </div>
-
                           <span className="text-[10px] text-gray-300 font-mono shrink-0">
                             #{li + 1}
                           </span>
-
                           <div className="flex gap-1.5 shrink-0">
                             <button
                               onClick={() => {

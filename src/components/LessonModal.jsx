@@ -7,7 +7,9 @@ import {
   HelpCircle,
   Link,
   Upload,
-  Tag,
+  Plus,
+  Trash2,
+  CheckCircle,
 } from "lucide-react";
 import { uploadVideoToCloudinary } from "../utils/cloudinaryUpload";
 
@@ -40,6 +42,12 @@ const TYPES = [
 
 const CATEGORIES = ["DSA", "FRONTEND", "BACKEND", "FULLSTACK", "WEB", "OTHER"];
 
+const emptyQuestion = () => ({
+  question: "",
+  options: ["", "", "", ""],
+  correctAnswer: 0,
+});
+
 export default function LessonModal({
   isOpen,
   onClose,
@@ -55,6 +63,9 @@ export default function LessonModal({
     contentUrl: "",
     file: null,
   });
+
+  const [quiz, setQuiz] = useState([emptyQuestion()]);
+
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -70,6 +81,14 @@ export default function LessonModal({
         contentUrl: editingLesson.contentUrl || "",
         file: null,
       });
+      if (
+        editingLesson.type === "QUIZ" &&
+        editingLesson.quiz?.questions?.length
+      ) {
+        setQuiz(editingLesson.quiz.questions);
+      } else {
+        setQuiz([emptyQuestion()]);
+      }
     } else {
       resetForm();
     }
@@ -86,38 +105,66 @@ export default function LessonModal({
       contentUrl: "",
       file: null,
     });
+    setQuiz([emptyQuestion()]);
   };
 
   if (!isOpen) return null;
 
+  const updateQuestion = (qi, field, value) => {
+    setQuiz((prev) =>
+      prev.map((q, i) => (i === qi ? { ...q, [field]: value } : q)),
+    );
+  };
+  const updateOption = (qi, oi, value) => {
+    setQuiz((prev) =>
+      prev.map((q, i) => {
+        if (i !== qi) return q;
+        const opts = [...q.options];
+        opts[oi] = value;
+        return { ...q, options: opts };
+      }),
+    );
+  };
+  const removeQuestion = (qi) =>
+    setQuiz((prev) => prev.filter((_, i) => i !== qi));
+  const addQuestion = () => setQuiz((prev) => [...prev, emptyQuestion()]);
+
   const handleSubmit = async () => {
     if (!form.title.trim()) return setError("Lesson title is required");
+
+    if (form.type === "VIDEO") {
+      if (!editingLesson && !form.file)
+        return setError("Please upload a video file");
+    }
+    if (form.type === "YOUTUBE" && !form.contentUrl.trim())
+      return setError("YouTube URL is required");
+    if (form.type === "BLOG" && !form.content.trim())
+      return setError("Blog content is required");
+    if (form.type === "QUIZ") {
+      for (const q of quiz) {
+        if (!q.question.trim()) return setError("All questions must have text");
+        if (q.options.some((o) => !o.trim()))
+          return setError("All options must be filled in");
+      }
+    }
+
     setError("");
     setSaving(true);
 
     try {
       let uploadedUrl = form.contentUrl;
 
-      if (form.type === "VIDEO") {
-        if (!editingLesson && !form.file)
-          return setError("Please upload a video file");
-        if (form.file) {
-          setUploading(true);
-          uploadedUrl = await uploadVideoToCloudinary(form.file, (p) =>
-            setUploadProgress(p),
-          );
-          setUploading(false);
-          if (!uploadedUrl) return setError("Video upload failed");
+      if (form.type === "VIDEO" && form.file) {
+        setUploading(true);
+        uploadedUrl = await uploadVideoToCloudinary(form.file, (p) =>
+          setUploadProgress(p),
+        );
+        setUploading(false);
+        if (!uploadedUrl) {
+          setError("Video upload failed");
+          return;
         }
-        if (!uploadedUrl) return setError("Video URL is missing");
       }
-      if (form.type === "YOUTUBE" && !form.contentUrl.trim())
-        return setError("YouTube URL is required");
-      if (
-        (form.type === "BLOG" || form.type === "QUIZ") &&
-        !form.content.trim()
-      )
-        return setError("Content is required");
 
       const payload = {
         title: form.title,
@@ -125,10 +172,11 @@ export default function LessonModal({
         category: form.category,
         moduleId,
       };
+
       if (form.type === "VIDEO" || form.type === "YOUTUBE")
         payload.contentUrl = uploadedUrl;
-      if (form.type === "BLOG" || form.type === "QUIZ")
-        payload.content = form.content;
+      if (form.type === "BLOG") payload.content = form.content;
+      if (form.type === "QUIZ") payload.quiz = quiz;
 
       await onSubmit(payload);
       onClose();
@@ -216,8 +264,7 @@ export default function LessonModal({
                       : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
                   }`}
                 >
-                  <Icon size={15} />
-                  {label}
+                  <Icon size={15} /> {label}
                 </button>
               ))}
             </div>
@@ -251,68 +298,69 @@ export default function LessonModal({
             </label>
 
             {form.type === "VIDEO" && (
-              <label
-                className={`flex flex-col items-center gap-2 py-7 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
-                  form.file
-                    ? "border-blue-300 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 bg-gray-50"
-                }`}
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.file ? "bg-blue-100" : "bg-gray-200"}`}
+              <>
+                <label
+                  className={`flex flex-col items-center gap-2 py-7 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+                    form.file
+                      ? "border-blue-300 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300 bg-gray-50"
+                  }`}
                 >
-                  <Upload
-                    size={18}
-                    className={form.file ? "text-blue-600" : "text-gray-400"}
-                  />
-                </div>
-                <div className="text-center">
-                  {form.file ? (
-                    <>
-                      <p className="text-sm font-semibold text-blue-700 truncate max-w-50">
-                        {form.file.name}
-                      </p>
-                      <p className="text-xs text-blue-500 mt-0.5">
-                        Click to replace
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-semibold text-gray-600">
-                        {editingLesson
-                          ? "Upload new video"
-                          : "Upload video file"}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        MP4, MOV, AVI supported
-                      </p>
-                    </>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={(e) =>
-                    setForm({ ...form, file: e.target.files[0] })
-                  }
-                />
-              </label>
-            )}
-
-            {uploading && (
-              <div className="mt-2">
-                <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                  <span>Uploading…</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-blue-500 transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center ${form.file ? "bg-blue-100" : "bg-gray-200"}`}
+                  >
+                    <Upload
+                      size={18}
+                      className={form.file ? "text-blue-600" : "text-gray-400"}
+                    />
+                  </div>
+                  <div className="text-center">
+                    {form.file ? (
+                      <>
+                        <p className="text-sm font-semibold text-blue-700 truncate max-w-50">
+                          {form.file.name}
+                        </p>
+                        <p className="text-xs text-blue-500 mt-0.5">
+                          Click to replace
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-gray-600">
+                          {editingLesson
+                            ? "Upload new video"
+                            : "Upload video file"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          MP4, MOV, AVI supported
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={(e) =>
+                      setForm({ ...form, file: e.target.files[0] })
+                    }
                   />
-                </div>
-              </div>
+                </label>
+                {uploading && (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                      <span>Uploading…</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {form.type === "YOUTUBE" && (
@@ -329,14 +377,10 @@ export default function LessonModal({
               </div>
             )}
 
-            {(form.type === "BLOG" || form.type === "QUIZ") && (
+            {form.type === "BLOG" && (
               <div className="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-50 transition-all">
                 <textarea
-                  placeholder={
-                    form.type === "BLOG"
-                      ? "Write your blog content here…"
-                      : "Enter quiz questions and answers…"
-                  }
+                  placeholder="Write your blog content here…"
                   rows={6}
                   className="bg-transparent outline-none text-sm text-gray-800 w-full placeholder:text-gray-400 resize-none"
                   value={form.content}
@@ -344,6 +388,114 @@ export default function LessonModal({
                     setForm({ ...form, content: e.target.value })
                   }
                 />
+              </div>
+            )}
+
+            {form.type === "QUIZ" && (
+              <div className="space-y-3">
+                {quiz.map((q, qi) => (
+                  <div
+                    key={qi}
+                    className="border border-gray-200 rounded-2xl p-4 bg-gray-50 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase">
+                        Question {qi + 1}
+                      </span>
+                      {quiz.length > 1 && (
+                        <button
+                          onClick={() => removeQuestion(qi)}
+                          className="w-6 h-6 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-colors"
+                        >
+                          <Trash2 size={11} className="text-red-500" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2.5 focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-50 transition-all">
+                      <input
+                        placeholder={`e.g. What does useState return?`}
+                        className="bg-transparent outline-none text-sm text-gray-800 w-full placeholder:text-gray-400 font-medium"
+                        value={q.question}
+                        onChange={(e) =>
+                          updateQuestion(qi, "question", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      {q.options.map((opt, oi) => {
+                        const isCorrect = q.correctAnswer === oi;
+                        return (
+                          <div
+                            key={oi}
+                            className={`flex items-center gap-2.5 border rounded-xl px-3 py-2 transition-all ${
+                              isCorrect
+                                ? "border-emerald-300 bg-emerald-50"
+                                : "border-gray-200 bg-white"
+                            }`}
+                          >
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateQuestion(qi, "correctAnswer", oi)
+                              }
+                              className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                                isCorrect
+                                  ? "border-emerald-500 bg-emerald-500"
+                                  : "border-gray-300 hover:border-emerald-400"
+                              }`}
+                            >
+                              {isCorrect && (
+                                <svg
+                                  width="8"
+                                  height="8"
+                                  viewBox="0 0 8 8"
+                                  fill="none"
+                                >
+                                  <path
+                                    d="M1.5 4L3 5.5L6.5 2"
+                                    stroke="white"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              )}
+                            </button>
+
+                            <input
+                              placeholder={`Option ${oi + 1}`}
+                              className={`bg-transparent outline-none text-sm w-full font-medium placeholder:text-gray-400 ${
+                                isCorrect ? "text-emerald-800" : "text-gray-800"
+                              }`}
+                              value={opt}
+                              onChange={(e) =>
+                                updateOption(qi, oi, e.target.value)
+                              }
+                            />
+
+                            {isCorrect && (
+                              <span className="text-[10px] font-bold text-emerald-600 shrink-0">
+                                Correct
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-gray-400">
+                      Click the circle next to an option to mark it as correct
+                    </p>
+                  </div>
+                ))}
+
+                <button
+                  onClick={addQuestion}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-all"
+                >
+                  <Plus size={13} /> Add Question
+                </button>
               </div>
             )}
           </div>
