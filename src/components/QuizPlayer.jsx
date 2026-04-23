@@ -8,7 +8,6 @@ export default function QuizPlayer({ lessonId }) {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* ================= FETCH QUIZ ================= */
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -27,7 +26,6 @@ export default function QuizPlayer({ lessonId }) {
     fetchQuiz();
   }, [lessonId]);
 
-  /* ================= SELECT ANSWER ================= */
   const handleSelect = (qIndex, optionIndex) => {
     if (submitted) return;
 
@@ -36,7 +34,6 @@ export default function QuizPlayer({ lessonId }) {
     setAnswers(updated);
   };
 
-  /* ================= SUBMIT ================= */
   const handleSubmit = async () => {
     try {
       const res = await API.post(`/quiz/${lessonId}/submit`, {
@@ -53,7 +50,6 @@ export default function QuizPlayer({ lessonId }) {
   if (loading) return <p>Loading quiz...</p>;
   if (!quiz) return <p>No quiz found</p>;
 
-  /* ================= UI ================= */
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow">
       <h2 className="text-xl font-bold mb-6">Quiz</h2>
