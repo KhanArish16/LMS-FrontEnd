@@ -8,3 +8,5 @@ export const getModules = (courseId) => API.get(`/modules/${courseId}`);
 
 export const getLessons = (moduleId) =>
   API.get(`/lessons?moduleId=${moduleId}`);
+
+export const getQuizes = (params = {}) => API.get(`/lessons`, { params });
