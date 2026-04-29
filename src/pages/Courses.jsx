@@ -5,7 +5,7 @@ import SearchFilter from "../components/SearchFilter";
 import { getCourses } from "../services/courseServices";
 import useDebounce from "../hooks/useDebounce";
 import { Loader } from "../components/Loader";
-import { Search } from "lucide-react";
+import { Search, HelpCircle } from "lucide-react";
 
 export default function Courses() {
   const [courses, setCourses] = useState([]);
@@ -56,33 +56,43 @@ export default function Courses() {
   };
 
   return (
-    <div>
-      <SearchFilter
-        search={search}
-        setSearch={setSearch}
-        category={category}
-        setCategory={setCategory}
-        level={level}
-        setLevel={setLevel}
-        sort={sort}
-        setSort={setSort}
-      />
-
-      <div className="relative mt-6">
-        {loading && courses.length > 0 && (
-          <div className="absolute inset-x-0 -top-2 flex justify-center z-10">
-            <Loader />
+    <div className="flex flex-col h-full">
+      <div className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur-md pb-3 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-3 pt-1">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Courses</h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {courses.length > 0
+                ? `${courses.length} course${courses.length !== 1 ? "s" : ""} available`
+                : "Test your knowledge"}
+            </p>
           </div>
-        )}
+          {courses.length > 0 && (
+            <span className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-xl text-[11px] font-bold text-amber-600">
+              <HelpCircle size={12} /> {courses.length} Course
+              {courses.length !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+        <SearchFilter
+          search={search}
+          setSearch={setSearch}
+          category={category}
+          setCategory={setCategory}
+          level={level}
+          setLevel={setLevel}
+          sort={sort}
+          setSort={setSort}
+        />
+      </div>
 
-        {loading && courses.length === 0 && (
-          <div className="flex h-[60vh] w-full items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-              <Loader />
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                Fetching Courses
-              </p>
-            </div>
+      <div
+        className="flex-1 overflow-y-auto pt-4 pb-6"
+        style={{ scrollbarWidth: "none" }}
+      >
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader />
           </div>
         )}
 
@@ -109,11 +119,13 @@ export default function Courses() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4">
-          {courses.map((course) => (
-            <CourseCard key={course._id} course={course} />
-          ))}
-        </div>
+        {!loading && courses.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4">
+            {courses.map((course) => (
+              <CourseCard key={course._id} course={course} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
