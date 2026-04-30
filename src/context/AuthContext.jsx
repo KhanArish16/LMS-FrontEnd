@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const res = await API.get("/auth/me");
-      setUser(res.data);
+      setUser(res.data.user || res.data);
     } catch (err) {
       console.log("Auth error:", err.message);
       localStorage.removeItem("token");
