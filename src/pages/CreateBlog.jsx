@@ -1,0 +1,5 @@
+import BlogEditor from "../components/BlogEditor";
+
+export default function CreateBlog() {
+  return <BlogEditor mode="create" />;
+}

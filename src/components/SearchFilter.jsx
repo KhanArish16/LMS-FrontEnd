@@ -71,6 +71,44 @@ function label(cat) {
   return map[cat] ?? cat.replace(/_/g, " ");
 }
 
+function Pill({ label, active, onClick, cls }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`shrink-0 px-3 py-1 text-[11px] font-bold tracking-wide border transition-all cursor-pointer ${cls}`}
+      style={{ borderRadius: "6px" }}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FilterSelect({ icon: Icon, value, onChange, className, children }) {
+  return (
+    <div className="relative">
+      <Icon
+        size={12}
+        className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"
+      />
+      <ChevronDown
+        size={10}
+        className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"
+      />
+      <select
+        value={value}
+        onChange={onChange}
+        className={`pl-7 pr-6 py-2.5 text-[11px] font-bold rounded-xl border appearance-none cursor-pointer outline-none transition-all ${className} ${
+          value
+            ? "border-blue-400 text-blue-400"
+            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-white hover:border-blue-400"
+        }`}
+      >
+        {children}
+      </select>
+    </div>
+  );
+}
+
 export default function SearchFilter({
   search,
   setSearch,
@@ -82,17 +120,16 @@ export default function SearchFilter({
   setSort,
 }) {
   const [showAll, setShowAll] = useState(false);
-
   const mobileCats = showAll ? CATEGORIES : CATEGORIES.slice(0, MOBILE_CAP);
 
   return (
-    <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 pb-3 pt-3">
-      <div className="flex gap-2 items-center mb-3">
+    <div className="w-full space-y-2.5">
+      <div className="hidden md:flex gap-2 items-center">
         <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 flex-1 min-w-0 transition-all focus-within:bg-white focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-50">
           <Search size={14} className="text-gray-400 shrink-0" />
           <input
             placeholder="Search courses..."
-            className="bg-transparent outline-none w-full text-sm text-blue-600 placeholder:text-gray-400 font-medium min-w-0"
+            className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400 font-medium min-w-0"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -106,53 +143,72 @@ export default function SearchFilter({
           )}
         </div>
 
-        <div className="relative shrink-0">
-          <SlidersHorizontal
-            size={12}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"
+        <FilterSelect
+          icon={SlidersHorizontal}
+          value={level}
+          onChange={(e) => setLevel(e.target.value)}
+          className="w-26"
+        >
+          <option value="">LEVEL</option>
+          <option value="BEGINNER">BEGINNER</option>
+          <option value="INTERMEDIATE">INTER...</option>
+          <option value="ADVANCED">ADVANCED</option>
+        </FilterSelect>
+
+        <FilterSelect
+          icon={ArrowDownUp}
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="w-23"
+        >
+          <option value="">SORT</option>
+          <option value="latest">LATEST</option>
+          <option value="oldest">OLDEST</option>
+        </FilterSelect>
+      </div>
+
+      <div className="flex md:hidden flex-col gap-2">
+        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 w-full transition-all focus-within:bg-white focus-within:border-blue-300 focus-within:ring-2 focus-within:ring-blue-50">
+          <Search size={14} className="text-gray-400 shrink-0" />
+          <input
+            placeholder="Search courses..."
+            className="bg-transparent outline-none w-full text-sm text-gray-700 placeholder:text-gray-400 font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
-          <ChevronDown
-            size={10}
-            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400"
-          />
-          <select
+          {search && (
+            <button onClick={() => setSearch("")} className="shrink-0">
+              <X
+                size={13}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              />
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <FilterSelect
+            icon={SlidersHorizontal}
             value={level}
             onChange={(e) => setLevel(e.target.value)}
-            className={`pl-7 pr-6 py-2.5 text-[11px] font-bold rounded-xl border appearance-none cursor-pointer outline-none transition-all w-22 sm:w-26 ${
-              level
-                ? " border-blue-400 text-blue-400"
-                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-white hover:border-blue-400"
-            }`}
+            className="flex-1"
           >
             <option value="">LEVEL</option>
             <option value="BEGINNER">BEGINNER</option>
             <option value="INTERMEDIATE">INTERMEDIATE</option>
             <option value="ADVANCED">ADVANCED</option>
-          </select>
-        </div>
+          </FilterSelect>
 
-        <div className="relative shrink-0 ">
-          <ArrowDownUp
-            size={12}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 "
-          />
-          <ChevronDown
-            size={10}
-            className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 "
-          />
-          <select
+          <FilterSelect
+            icon={ArrowDownUp}
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className={`pl-7 pr-6 py-2.5 text-[11px] font-bold rounded-xl border appearance-none cursor-pointer outline-none transition-all w-19 sm:w-23 hover:border-blue-400 ${
-              sort
-                ? " border-blue-400 text-blue-400"
-                : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-white"
-            }`}
+            className="flex-1"
           >
             <option value="">SORT</option>
             <option value="latest">LATEST</option>
             <option value="oldest">OLDEST</option>
-          </select>
+          </FilterSelect>
         </div>
       </div>
 
@@ -192,7 +248,6 @@ export default function SearchFilter({
               : "bg-gray-100 text-gray-600 border-gray-200"
           }
         />
-
         {mobileCats.map((cat) => (
           <Pill
             key={cat}
@@ -213,7 +268,6 @@ export default function SearchFilter({
             }
           />
         )}
-
         <button
           onClick={() => setShowAll((v) => !v)}
           className="shrink-0 px-2.5 py-1 text-[11px] font-bold text-gray-500 border border-dashed border-gray-300 hover:border-gray-500 hover:text-gray-700 transition-all"
@@ -223,17 +277,5 @@ export default function SearchFilter({
         </button>
       </div>
     </div>
-  );
-}
-
-function Pill({ label, active, onClick, cls }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`shrink-0 px-3 py-1 text-[11px] font-bold tracking-wide border transition-all cursor-pointer ${cls}`}
-      style={{ borderRadius: "6px" }}
-    >
-      {label}
-    </button>
   );
 }

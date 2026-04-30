@@ -13,6 +13,9 @@ import Roadmap from "./pages/Roadmap";
 import Videos from "./pages/Videos";
 import CourseDetail from "./pages/CourseDetail";
 import CourseBuilder from "./pages/CourseBuilder";
+import BlogDetail from "./pages/BlogDetail";
+import CreateBlog from "./pages/CreateBlog";
+import EditBlog from "./pages/EditBlog";
 
 function App() {
   return (
@@ -126,6 +129,37 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <Blogs />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/blogs/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <BlogDetail />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blogs/create"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <CreateBlog />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/blogs/:id/edit"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <EditBlog mode="edit" />
               </DashboardLayout>
             </ProtectedRoute>
           }
