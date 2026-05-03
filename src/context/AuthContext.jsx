@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import API from "../services/api";
-import { Navigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -8,19 +7,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
   const fetchUser = async () => {
     try {
-      const res = await API.get("/auth/me");
-      setUser(res.data.user || res.data);
+      const res = await API.get("/users/me");
+      setUser(res.data.data);
     } catch (err) {
       console.log("Auth error:", err.message);
       localStorage.removeItem("token");
@@ -30,6 +20,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
   const login = async (email, password) => {
     const res = await API.post("/auth/login", {
       email,
@@ -37,7 +37,8 @@ export const AuthProvider = ({ children }) => {
     });
 
     localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
+
+    await fetchUser();
   };
 
   const signup = async (name, email, password, role) => {
@@ -51,16 +52,24 @@ export const AuthProvider = ({ children }) => {
     return res.data;
   };
 
-  const logout = (data) => {
+  const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    <Navigate to={"/"} />;
-    window.reload();
+    window.location.href = "/login";
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, signup, logout, isAuthenticated: !!user }}
+      value={{
+        user,
+        setUser,
+        refreshUser: fetchUser,
+        loading,
+        login,
+        signup,
+        logout,
+        isAuthenticated: !!user,
+      }}
     >
       {!loading && children}
     </AuthContext.Provider>

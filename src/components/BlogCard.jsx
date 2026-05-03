@@ -27,14 +27,20 @@ export default function BlogCard({ blog }) {
       className="group bg-white border border-gray-100 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
     >
       <div className="relative overflow-hidden h-40 sm:h-44 bg-gray-100">
-        <img
-          src={
-            blog.thumbnail ||
-            "https://placehold.co/400x200/f1f5f9/94a3b8?text=Blog"
-          }
-          alt={blog.title}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-        />
+        {blog.thumbnail ? (
+          <img
+            src={blog.thumbnail}
+            alt={blog.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-gray-100 to-gray-200">
+            <h2 className="text-lg font-bold text-gray-500 text-center px-3">
+              {blog.title}
+            </h2>
+            <PlayCircle size={36} className="text-gray-300" />
+          </div>
+        )}
       </div>
 
       <div className="p-4">

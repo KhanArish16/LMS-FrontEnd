@@ -45,7 +45,7 @@ export default function Blogs() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="shrink-0 sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 pb-3 pt-2">
+      <div className="sticky top-0 z-20 bg-gray-50/95 backdrop-blur-md pb-3 border-b border-gray-100">
         <div className="flex items-center gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold text-gray-900 leading-tight">

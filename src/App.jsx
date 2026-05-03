@@ -16,6 +16,8 @@ import CourseBuilder from "./pages/CourseBuilder";
 import BlogDetail from "./pages/BlogDetail";
 import CreateBlog from "./pages/CreateBlog";
 import EditBlog from "./pages/EditBlog";
+import VideoPlayer from "./pages/VideoPlayer";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -23,6 +25,17 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Profile />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/"
@@ -52,6 +65,17 @@ function App() {
             <ProtectedRoute>
               <DashboardLayout>
                 <Videos />
+              </DashboardLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/videos/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <VideoPlayer />
               </DashboardLayout>
             </ProtectedRoute>
           }

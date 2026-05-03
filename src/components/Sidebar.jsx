@@ -1,5 +1,5 @@
 import { useAuth } from "../context/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   BookOpen,
@@ -20,7 +20,7 @@ const menuGroups = [
     items: [
       { name: "Dashboard", icon: LayoutDashboard, path: "/" },
       { name: "Courses", icon: BookOpen, path: "/courses" },
-      { name: "Roadmap", icon: Map, path: "/roadmap" },
+      // { name: "Roadmap", icon: Map, path: "/roadmap" },
       { name: "Videos", icon: Video, path: "/videos" },
     ],
   },
@@ -74,7 +74,7 @@ export default function Sidebar({ isSidebar, setIsSidebar }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const initials = user?.name?.slice(0, 2).toUpperCase() || "AC";
+  const initials = user?.name?.slice(0, 2).toUpperCase() || "U";
 
   const go = (path) => {
     navigate(path);
@@ -143,7 +143,10 @@ export default function Sidebar({ isSidebar, setIsSidebar }) {
                 {user?.role || "Student"}
               </p>
             </div>
-            <button className="shrink-0 w-6 h-6 rounded-lg hover:bg-gray-200 flex items-center justify-center transition-colors">
+            <button
+              className="shrink-0 w-6 h-6 rounded-lg hover:bg-gray-200 flex items-center justify-center transition-colors"
+              onClick={() => go("/profile")}
+            >
               <Settings
                 size={13}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
