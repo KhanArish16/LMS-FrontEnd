@@ -2,10 +2,19 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createBlog, updateBlog, getBlogById } from "../services/blogServices";
 import { Loader } from "./Loader";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import {
+  DndContext,
+  closestCenter,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
+  arrayMove,
 } from "@dnd-kit/sortable";
 import SortableBlock from "../components/SortableBlock";
 import {
@@ -22,7 +31,8 @@ import {
   FileText,
   Eye,
   EyeOff,
-  ChevronDown,
+  GripVertical,
+  ArrowUpDown,
   PlayCircle,
 } from "lucide-react";
 
@@ -90,6 +100,49 @@ function Input({ className = "", ...props }) {
   );
 }
 
+function BlockGhost({ block }) {
+  const TYPE_CONFIG = {
+    TEXT: { label: "Text", icon: Type, color: "bg-gray-100   text-gray-600" },
+    CODE: { label: "Code", icon: Code, color: "bg-blue-50    text-blue-600" },
+    IMAGE: {
+      label: "Image",
+      icon: Image,
+      color: "bg-emerald-50 text-emerald-600",
+    },
+    YOUTUBE: {
+      label: "YouTube",
+      icon: PlayCircle,
+      color: "bg-red-50     text-red-600",
+    },
+    LINK: { label: "Link", icon: Link, color: "bg-amber-50   text-amber-600" },
+  };
+  const cfg = TYPE_CONFIG[block?.type] ?? TYPE_CONFIG.TEXT;
+  const Icon = cfg.icon;
+  return (
+    <div className="bg-white border-2 border-blue-400 rounded-2xl shadow-2xl shadow-blue-100 opacity-95 rotate-1 scale-[1.02]">
+      <div className="flex items-center gap-2 px-3 py-3 bg-blue-50 border-b border-blue-100 rounded-t-2xl">
+        <div className="flex flex-col items-center gap-0.5 px-1">
+          <GripVertical size={15} className="text-blue-500" />
+          <span className="text-[7px] font-black uppercase tracking-widest text-blue-400">
+            DRAG
+          </span>
+        </div>
+        <span
+          className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest ${cfg.color}`}
+        >
+          <Icon size={10} /> {cfg.label}
+        </span>
+        <span className="text-[10px] text-blue-300 font-mono">moving…</span>
+      </div>
+      <div className="px-4 py-3">
+        <p className="text-xs text-gray-400 font-mono truncate">
+          {block?.value?.slice(0, 60) || `${cfg.label} block`}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function BlogEditor({ mode }) {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -105,6 +158,14 @@ export default function BlogEditor({ mode }) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [activeId, setActiveId] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+  );
 
   useEffect(() => {
     if (mode === "edit" && id) fetchBlog();
@@ -164,6 +225,13 @@ export default function BlogEditor({ mode }) {
     setContent(updated);
   };
 
+  const handleDragStart = ({ active }) => setActiveId(active.id);
+  const handleDragEnd = ({ active, over }) => {
+    setActiveId(null);
+    if (!over || active.id === over.id) return;
+    setContent((items) => arrayMove(items, active.id, over.id));
+  };
+
   const handleSubmit = async () => {
     setSaving(true);
     try {
@@ -173,22 +241,18 @@ export default function BlogEditor({ mode }) {
       fd.append("isPublished", isPublished);
       fd.append("tags", JSON.stringify(tags));
       if (thumbnailFile) fd.append("thumbnail", thumbnailFile);
-
       const cleanContent = content.map((block) => ({
         type: block.type,
         value: block.value || "",
         language: block.language || "",
       }));
       fd.append("content", JSON.stringify(cleanContent));
-
       content.forEach((block, i) => {
         if (block.type === "IMAGE" && block.file)
           fd.append(`image_${i}`, block.file);
       });
-
       if (mode === "create") await createBlog(fd);
       else await updateBlog(id, fd);
-
       navigate("/blogs");
     } finally {
       setSaving(false);
@@ -202,6 +266,8 @@ export default function BlogEditor({ mode }) {
       </div>
     );
 
+  const activeBlock = activeId !== null ? content[activeId] : null;
+
   return (
     <div className="w-full max-w-3xl mx-auto pb-16 space-y-5">
       <div className="flex items-center justify-between pt-2 pb-1">
@@ -213,7 +279,6 @@ export default function BlogEditor({ mode }) {
             {mode === "create" ? "New Blog Post" : "Edit Blog Post"}
           </h1>
         </div>
-
         <button
           onClick={() => setIsPublished((v) => !v)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all ${
@@ -237,23 +302,20 @@ export default function BlogEditor({ mode }) {
 
       <Field label="Category">
         <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map((cat) => {
-            const isActive = category === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`px-3 py-1.5 text-[11px] font-black tracking-widest border transition-all ${
-                  isActive
-                    ? CAT_STYLE[cat]
-                    : "bg-white border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-700"
-                }`}
-                style={{ borderRadius: "6px" }}
-              >
-                {cat}
-              </button>
-            );
-          })}
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`px-3 py-1.5 text-[11px] font-black tracking-widest border transition-all ${
+                category === cat
+                  ? CAT_STYLE[cat]
+                  : "bg-white border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-700"
+              }`}
+              style={{ borderRadius: "6px" }}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </Field>
 
@@ -322,7 +384,6 @@ export default function BlogEditor({ mode }) {
                 className="w-full object-cover"
                 style={{ maxHeight: "220px" }}
               />
-
               <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                 <label className="cursor-pointer flex items-center gap-1.5 bg-white/90 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-800">
                   <ImagePlus size={13} /> Replace image
@@ -334,7 +395,6 @@ export default function BlogEditor({ mode }) {
                   />
                 </label>
               </div>
-
               <div className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg">
                 <CheckCircle size={11} className="text-emerald-500" />
                 <span className="text-[10px] font-semibold text-gray-700">
@@ -392,34 +452,48 @@ export default function BlogEditor({ mode }) {
             </p>
           </div>
         ) : (
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={({ active, over }) => {
-              if (!over || active.id === over.id) return;
-              const updated = [...content];
-              const [moved] = updated.splice(active.id, 1);
-              updated.splice(over.id, 0, moved);
-              setContent(updated);
-            }}
-          >
-            <SortableContext
-              items={content.map((_, i) => i)}
-              strategy={verticalListSortingStrategy}
+          <>
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl mb-3">
+              <ArrowUpDown size={13} className="text-blue-500 shrink-0" />
+              <p className="text-[11px] text-blue-600 font-semibold">
+                Drag the{" "}
+                <span className="inline-flex items-center gap-0.5 mx-0.5 px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[10px] font-black text-blue-500">
+                  <GripVertical size={9} />
+                  DRAG
+                </span>{" "}
+                handle to reorder blocks. Hold on mobile.
+              </p>
+            </div>
+
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
             >
-              <div className="space-y-2">
-                {content.map((block, i) => (
-                  <SortableBlock
-                    key={i}
-                    index={i}
-                    block={block}
-                    removeBlock={removeBlock}
-                    updateBlock={updateBlock}
-                    handleImageUpload={handleImageUpload}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+              <SortableContext
+                items={content.map((_, i) => i)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {content.map((block, i) => (
+                    <SortableBlock
+                      key={i}
+                      index={i}
+                      block={block}
+                      removeBlock={removeBlock}
+                      updateBlock={updateBlock}
+                      handleImageUpload={handleImageUpload}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+
+              <DragOverlay>
+                {activeBlock ? <BlockGhost block={activeBlock} /> : null}
+              </DragOverlay>
+            </DndContext>
+          </>
         )}
       </div>
 
