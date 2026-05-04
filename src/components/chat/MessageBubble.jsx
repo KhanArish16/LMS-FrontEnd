@@ -3,11 +3,28 @@ export default function MessageBubble({ message, user }) {
 
   return (
     <div
-      className={`max-w-xs p-2 rounded text-sm ${
-        isMe ? "bg-blue-500 text-white ml-auto" : "bg-gray-200"
-      }`}
+      className={`flex items-end gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}
     >
-      {message.text}
+      {!isMe && (
+        <div className="w-7 h-7 rounded-full bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center shrink-0 mb-0.5 shadow-sm">
+          <span className="text-white text-[10px] font-semibold">
+            {message.sender?.name?.slice(0, 2).toUpperCase() || "?"}
+          </span>
+        </div>
+      )}
+
+      <div
+        className={`
+          max-w-[72%] sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm leading-relaxed
+          ${
+            isMe
+              ? "bg-blue-600 text-white rounded-br-sm shadow-sm shadow-blue-200"
+              : "bg-white text-gray-800 rounded-bl-sm shadow-sm border border-gray-100"
+          }
+        `}
+      >
+        {message.text}
+      </div>
     </div>
   );
 }
